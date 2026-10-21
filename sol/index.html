@@ -1,82 +1,145 @@
 <!doctype html><html lang=zh><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
-<title>MemeDesk · pump.fun (Solana) 跟单策略模拟交易台</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script><script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
+<title>MemeDesk · SIM Trading Desk</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
 <style>
-:root{--bg:#0b0e14;--pn:#141922;--ln:#232a36;--tx:#e6e6e6;--mu:#8b949e;--up:#3fb950;--dn:#f85149;--ac:#58a6ff}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:14px -apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
-header{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;padding:12px 16px;border-bottom:1px solid var(--ln);background:#0f131b;position:sticky;top:0;z-index:5}
-header h1{font-size:17px;margin:0}.tag{font-size:11px;padding:2px 6px;border-radius:4px;background:#3b2a07;color:#f0b429}.mu{color:var(--mu);font-size:12px}
-main{padding:12px;display:grid;gap:12px;grid-template-columns:1fr}
-.pn{background:var(--pn);border:1px solid var(--ln);border-radius:8px;padding:12px;min-width:0}.pn h3{margin:0 0 8px;font-size:13px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.kpi{background:var(--pn);border:1px solid var(--ln);border-radius:8px;padding:10px}
-.kpi .l{font-size:11px;color:var(--mu)}.kpi .v{font-size:20px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}.kpi .s{font-size:11px;color:var(--mu)}
-.up{color:var(--up)}.dn{color:var(--dn)}
-.chartbox{position:relative;height:300px}.toggles{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
-.toggles label{font-size:12px;border:1px solid var(--ln);border-radius:14px;padding:3px 9px;cursor:pointer;user-select:none}.toggles input{display:none}.toggles label.off{opacity:.35}
-.toggles i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
-.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
-th,td{padding:6px 8px;border-bottom:1px solid var(--ln);text-align:right;white-space:nowrap}th{color:var(--mu);font-weight:500;position:sticky;top:0;background:var(--pn)}
-td:first-child,th:first-child{text-align:left}tr:hover td{background:#1a202b}a{color:var(--ac);text-decoration:none}
-.btn{font-size:12px;background:#1f2633;border:1px solid var(--ln);color:var(--tx);border-radius:5px;padding:3px 8px;cursor:pointer}
-details.st{border-top:1px solid var(--ln);padding:6px 0}details.st summary{cursor:pointer;color:var(--ac)}.tkn b{font-weight:600}.tkn small{color:var(--mu);margin-left:4px}.badge{font-size:10px;border-radius:3px;padding:1px 4px;margin-left:4px;background:#22303f;color:#79c0ff}.badge.d{background:#3a1d1d;color:#f85149}
-@media(max-width:1023px){th,td{padding:5px 6px;font-size:12px}}
-ul.lim{margin:0;padding-left:18px;color:var(--mu);font-size:12px;line-height:1.7}footer{text-align:center;color:#f0b429;padding:16px;font-size:13px}
+:root{--bg:#eef0f5;--card:#fff;--tx:#0f172a;--mu:#64748b;--ln:#e2e8f0;--up:#059669;--dn:#e11d48;--ac:#2563eb;--sim:#b45309;--chip:#f1f5f9}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.45 -apple-system,"PingFang SC","Segoe UI",sans-serif}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:14px 18px;background:var(--card);border-bottom:1px solid var(--ln);position:sticky;top:0;z-index:10}
+.brand{display:flex;align-items:center;gap:10px}.logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#111827,#374151);color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px}
+.brand h1{margin:0;font-size:18px;letter-spacing:-.02em}.brand .sub{font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.06em}
+.badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:#fff7ed;color:var(--sim);border:1px solid #fed7aa}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--mu);background:var(--chip);padding:4px 10px;border-radius:999px}
+.live i{width:7px;height:7px;border-radius:50%;background:#94a3b8}
+.chn{display:inline-flex;border:1px solid var(--ln);border-radius:8px;overflow:hidden;margin-left:auto}
+.chn a{padding:5px 12px;font-size:12px;font-weight:600;color:var(--mu);text-decoration:none}.chn a.on{background:#0f172a;color:#fff}
+main{max-width:1400px;margin:0 auto;padding:14px;display:grid;gap:12px}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kpi{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:14px 16px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.kpi .l{font-size:11px;font-weight:700;color:var(--mu);letter-spacing:.08em;text-transform:uppercase}
+.kpi .v{font-size:28px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.kpi .s{font-size:12px;color:var(--mu);margin-top:2px}.up{color:var(--up)}.dn{color:var(--dn)}
+.ringwrap{display:flex;align-items:center;gap:12px}.ring{width:64px;height:64px;border-radius:50%;background:conic-gradient(var(--up) calc(var(--p)*1%),#e2e8f0 0);display:grid;place-items:center;position:relative}
+.ring::after{content:"";width:48px;height:48px;border-radius:50%;background:#fff;position:absolute}.ring span{position:relative;z-index:1;font-size:12px;font-weight:800}
+.gauge{height:8px;background:#fee2e2;border-radius:999px;overflow:hidden;margin-top:8px}.gauge>i{display:block;height:100%;background:#f97316;border-radius:999px}
+.mid{display:grid;gap:12px}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:14px;box-shadow:0 1px 2px rgba(15,23,42,.04);min-width:0}
+.card h3{margin:0 0 10px;font-size:12px;font-weight:700;color:var(--mu);letter-spacing:.08em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+.chartbox{height:280px;position:relative}
+.log{max-height:320px;overflow:auto;display:flex;flex-direction:column;gap:6px}
+.log .row{display:grid;grid-template-columns:64px 1fr auto;gap:8px;align-items:start;padding:8px 10px;border-radius:10px;background:var(--chip);font-size:12px}
+.tagb{font-size:10px;font-weight:800;padding:2px 6px;border-radius:5px;letter-spacing:.04em}
+.tagb.buy{background:#d1fae5;color:#047857}.tagb.sell{background:#ffe4e6;color:#be123c}.tagb.skip{background:#ffedd5;color:#c2410c}.tagb.copy{background:#dbeafe;color:#1d4ed8}
+.scroller{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.wcard{flex:0 0 200px;scroll-snap-align:start;background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:12px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.wcard .top{display:flex;align-items:center;gap:8px}.av{width:32px;height:32px;border-radius:50%;background:#0f172a;color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px}
+.copying{font-size:10px;font-weight:800;color:#047857;background:#d1fae5;padding:2px 6px;border-radius:999px;margin-left:auto}
+.idle{font-size:10px;font-weight:800;color:var(--mu);background:var(--chip);padding:2px 6px;border-radius:999px;margin-left:auto}
+.wcard .nm{font-weight:700;font-size:13px;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wcard .pnl{font-size:18px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums}
+.wcard .meta{font-size:11px;color:var(--mu);margin-top:2px}
+.tw{overflow:auto}table{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+th,td{padding:7px 8px;border-bottom:1px solid var(--ln);text-align:right;white-space:nowrap}th{color:var(--mu);font-weight:600;text-align:right;background:#fafbfc;position:sticky;top:0}
+td:first-child,th:first-child,td.l,th.l{text-align:left}a{color:var(--ac);text-decoration:none}
+.tkn b{font-weight:700}.tkn small{color:var(--mu);margin-left:4px}
+.pill{font-size:10px;border-radius:4px;padding:1px 5px;margin-left:4px;background:#e0e7ff;color:#3730a3}.pill.d{background:#fee2e2;color:#b91c1c}
+.btn{font-size:12px;background:#f8fafc;border:1px solid var(--ln);border-radius:8px;padding:4px 10px;cursor:pointer;color:var(--tx)}
+details.st{border-top:1px solid var(--ln);padding:8px 0}details.st summary{cursor:pointer;color:var(--ac);font-weight:600}
+footer{text-align:center;padding:18px 12px 28px;color:var(--sim);font-size:13px;font-weight:600}
+.footnote{color:var(--mu);font-size:11px;font-weight:400;margin-top:4px}
+.toggles{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.toggles label{font-size:11px;border:1px solid var(--ln);border-radius:999px;padding:3px 9px;cursor:pointer;background:#fff;user-select:none}.toggles label.off{opacity:.35}
+.toggles i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
 @media(min-width:1024px){
- main{grid-template-columns:repeat(12,1fr);padding:16px 20px;max-width:1800px;margin:auto}
- .kpis{grid-column:1/-1;grid-template-columns:repeat(6,1fr)}
- #chartP{grid-column:1/10}#chartP .chartbox{height:440px}#sideP{grid-column:10/13}
- #cmpP{grid-column:1/8}#walP{grid-column:8/13}#tradeP,#openP,#allP{grid-column:1/-1}#limP{grid-column:1/-1}
- .tw.scroll{max-height:360px;overflow-y:auto}
+ .kpis{grid-template-columns:repeat(4,1fr)}
+ .mid{grid-template-columns:1.6fr 1fr}
+ .chartbox{height:360px}.log{max-height:400px}
 }
-.chn{display:inline-flex;border:1px solid var(--ln);border-radius:6px;overflow:hidden}.chn a{padding:2px 10px;font-size:12px;color:var(--mu)}.chn a.on{background:#1f6feb;color:#fff}
+@media(max-width:1023px){header .chn{margin-left:0}.kpi .v{font-size:22px}}
 </style></head><body>
-<header><h1>MemeDesk 交易台</h1><span class=tag>纯模拟</span><span class=mu>Solana · pump.fun 跟单策略回测</span><nav class=chn><a href="../">BSC</a><a class=on href="./">SOL</a></nav><span class=mu id=meta style="margin-left:auto"></span></header>
+<header>
+ <div class=brand><div class=logo>MD</div><div><h1>MemeDesk</h1><div class=sub id=subtitle>PUMP.FUN COPY DESK</div></div></div>
+ <span class=badge>SIM</span>
+ <span class=live><i></i><span id=sess>SESSION REPLAY</span></span>
+ <span class=live id=counts></span>
+ <nav class=chn><a href="../">BSC</a><a class=on href="./">SOL</a></nav>
+</header>
 <main>
 <section class=kpis id=kpis></section>
-<section class=pn id=chartP><h3>净值曲线（$1000 起始，点选切换策略）</h3><div class=toggles id=tg></div>
- <div style="margin-bottom:6px"><button class=btn id=all>全选</button> <button class=btn id=none>全不选</button> <button class=btn id=pos>只看 S 系列</button></div>
- <div class=chartbox><canvas id=c></canvas></div></section>
-<section class=pn id=sideP><h3>样本概况</h3><table id=info></table></section>
-<section class=pn id=cmpP><h3>策略对比</h3><div class=tw><table id=cmp></table></div></section>
-<section class=pn id=walP><h3>领头钱包评估（训练期画像）</h3><div class="tw scroll"><table id=wal></table></div></section>
-<section class=pn id=tradeP><h3>最近交易（逐笔往返：买入 → 平仓）</h3><div style="margin-bottom:6px"><select class=btn id=fs><option value="">全部策略</option></select> <span class=mu>价格单位：USD/枚；期末未平仓已按最后价估值平仓（原因"期末估值平仓"）</span></div><div class="tw scroll"><table id=tr></table></div></section>
-<section class=pn id=openP><h3>当前持仓（样本期末）</h3><div class="tw scroll"><table id=op></table></div></section>
-<section class=pn id=allP><h3>各策略全部交易</h3><div id=alltr></div></section>
-<section class=pn id=limP><h3>数据局限</h3><ul class=lim>
-<li>数据来自 pump.fun 公开成交接口（曲线内 + 毕业后 PumpSwap 成交，含钱包/SOL 金额/时间）；代币池由 pump.fun 列表接口发现（最新创建 + 最近成交各约 1050 个），偏向仍活跃的币，存在幸存者偏差。</li>
-<li>每笔 $10，买卖各扣 4%；按信号后下一笔成交价入场，另加恒定乘积自身冲击近似（虚拟储备 30 SOL，毕业池按约 85 SOL，是估算值）。</li>
-<li>期末 12 小时没有成交的持仓按 0 计；S1–S5 只在样本后 60% 交易（前 40% 用来选钱包）。</li>
-<li>各策略交易数少，结果不显著；没模拟 MEV 夹子和税币税率；开发者和捆绑识别都是近似；占位钱包=训练期买币种类最多的 5 个地址，多为机器人，不是真实领头钱包。</li></ul></section>
-</main><footer>⚠️ 仅模拟研究，不构成投资建议。不连接钱包，不进行任何真实交易。</footer>
+<section class=mid>
+ <div class=card><h3><span>BALANCE HISTORY</span><span id=featName class=mu></span></h3>
+  <div class=toggles id=tg></div>
+  <div style="margin-bottom:6px"><button class=btn id=all>全选</button> <button class=btn id=none>全不选</button> <button class=btn id=pos>只看 S 系列</button></div>
+  <div class=chartbox><canvas id=c></canvas></div></div>
+ <div class=card><h3><span>COPY LOG</span><span id=logn class=mu></span></h3><div class=log id=log></div></div>
+</section>
+<section class=card><h3><span>STRATEGIES · WALLETS</span><span class=mu>横滑查看</span></h3><div class=scroller id=cards></div></section>
+<section class=card><h3>最近交易（买入 → 平仓）</h3>
+ <div style="margin-bottom:8px"><select class=btn id=fs><option value="">全部策略</option></select>
+ <span class=mu>价格 USD/枚 · 期末未平仓按最后价估值</span></div>
+ <div class=tw style="max-height:360px"><table id=tr></table></div></section>
+<section class=card><h3>当前持仓（样本期末）</h3><div class=tw style="max-height:280px"><table id=op></table></div></section>
+<section class=card><h3>各策略全部交易</h3><div id=alltr></div></section>
+<section class=card><h3>数据局限</h3><ul class=mu style="margin:0;padding-left:18px;font-size:12px;line-height:1.7" id=limits></ul></section>
+</main>
+<footer>⚠️ SIM / 仅模拟研究，不构成投资建议。不连接钱包，不做真实交易。
+<div class=footnote id=meta></div></footer>
 <script>
-const C=['#f85149','#8b949e','#f0b429','#58a6ff','#79c0ff','#3fb950','#d2a8ff','#39c5cf','#ff7b72'];
-const p=x=>x==null?'—':(x*100).toFixed(1)+'%',sg=x=>x>=0?'up':'dn',sh=a=>a.slice(0,6)+'…'+a.slice(-4);
+const C=['#e11d48','#94a3b8','#f59e0b','#2563eb','#38bdf8','#059669','#a855f7','#0ea5e9','#f43f5e'];
+const p=x=>x==null?'—':(x*100).toFixed(1)+'%',sg=x=>x>=0?'up':'dn',sh=a=>a?(a.length>12?a.slice(0,6)+'…'+a.slice(-4):a):'';
+const E=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 fetch('data.json?'+Date.now()).then(r=>r.json()).then(d=>{
-const S=d.strategies;meta.textContent=`更新 ${d.updated}（北京时间）`;
-const best=[...S].sort((a,b)=>b.ret-a.ret)[0],worst=[...S].sort((a,b)=>a.ret-b.ret)[0],tot=S.reduce((a,s)=>a+s.trades,0),pos=S.filter(s=>s.ret>0).length;
-const K=[['最佳策略',`<span class=${sg(best.ret)}>${p(best.ret)}</span>`,best.name],['最差策略',`<span class=${sg(worst.ret)}>${p(worst.ret)}</span>`,worst.name],
-['盈利策略数',`${pos} / ${S.length}`,'期末净值 > $1000'],['模拟交易总数',tot,'所有策略合计'],['样本成交',d.rows.toLocaleString(),`${d.tokens.toLocaleString()} 个代币`],['样本区间',d.sample[1].slice(5),'始于 '+d.sample[0].slice(5)]];
-kpis.innerHTML=K.map(k=>`<div class=kpi><div class=l>${k[0]}</div><div class=v>${k[1]}</div><div class=s>${k[2]}</div></div>`).join('');
-info.innerHTML=[['样本开始',d.sample[0]],['样本结束',d.sample[1]],['训练/测试切分',d.split],['曲线成交笔数',d.rows.toLocaleString()],['代币数',d.tokens.toLocaleString()],['SOL/USD',d.bnbusd?.toFixed(2)],['已毕业到 PumpSwap 的币',d.grad??'—'],['手续费','买卖各 4%'],['每笔金额','$10']].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
-const ch=new Chart(c,{type:'line',data:{datasets:S.map((s,i)=>({label:s.name,data:s.curve.map(([x,y])=>({x,y})),borderColor:C[i%9],pointRadius:0,borderWidth:2}))},
-options:{animation:false,maintainAspectRatio:false,interaction:{mode:'nearest',intersect:false},plugins:{legend:{display:false}},scales:{x:{type:'time',ticks:{color:'#8b949e'},grid:{color:'#1c222c'}},y:{ticks:{color:'#8b949e'},grid:{color:'#1c222c'}}}}});
-tg.innerHTML=S.map((s,i)=>`<label data-i=${i}><i style="background:${C[i%9]}"></i>${s.name}</label>`).join('');
+const S=d.strategies,M=d.tokens_meta||{},W=d.wallets||[];
+const feat=[...S].sort((a,b)=>b.equity-a.equity)[0];
+const closed=feat.rts||[], wins=closed.filter(x=>x.r>0).length, losses=closed.filter(x=>x.r<=0).length;
+const wr=feat.win!=null?feat.win:(closed.length?wins/closed.length:0);
+const pnlUsd=feat.equity-1000;
+counts.textContent=`${W.length||0} WALLETS · ${S.reduce((a,s)=>a+s.trades,0)} COPIES`;
+featName.textContent=feat.name;
+meta.textContent=`更新 ${d.updated}（北京时间）· 样本 ${d.sample[0]} → ${d.sample[1]} · 切分 ${d.split} · ${d.rows.toLocaleString()} 笔 · ${d.tokens.toLocaleString()} 代币 · SESSION REPLAY`;
+kpis.innerHTML=`
+<div class=kpi><div class=l>Balance</div><div class=v>$${feat.equity.toFixed(2)}</div><div class=s>started at $1000 · ${E(feat.name)}</div></div>
+<div class=kpi><div class=l>Total P&amp;L</div><div class="v ${sg(pnlUsd)}">${pnlUsd>=0?'+':''}$${pnlUsd.toFixed(2)}</div><div class="s ${sg(feat.ret)}">${(feat.ret>=0?'+':'')+p(feat.ret)}</div></div>
+<div class=kpi><div class=l>Max Drawdown</div><div class="v dn">-${p(feat.mdd).replace('%','')}%</div><div class=gauge><i style="width:${Math.min(100,feat.mdd*100/0.4*100)}%"></i></div><div class=s>vs soft limit 40%</div></div>
+<div class=kpi><div class=l>Win Rate</div><div class=ringwrap><div class=ring style="--p:${(wr||0)*100}"><span>${p(wr)}</span></div><div><div class=v style="font-size:22px">${wins}W ${losses}L</div><div class=s>${feat.trades} trades</div></div></div></div>`;
+const ch=new Chart(c,{type:'line',data:{datasets:S.map((s,i)=>({label:s.name,data:s.curve.map(([x,y])=>({x,y})),borderColor:C[i%9],backgroundColor:C[i%9]+'22',fill:i===S.indexOf(feat),pointRadius:0,borderWidth:s===feat?2.5:1.5,tension:.15}))},
+options:{animation:false,maintainAspectRatio:false,interaction:{mode:'nearest',intersect:false},plugins:{legend:{display:false}},scales:{x:{type:'time',ticks:{color:'#94a3b8',maxTicks:5},grid:{color:'#f1f5f9'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#f1f5f9'}}}}});
+tg.innerHTML=S.map((s,i)=>`<label data-i=${i}><i style="background:${C[i%9]}"></i>${s.name.split('(')[0].split(':')[0].trim()}</label>`).join('');
 const sync=()=>tg.querySelectorAll('label').forEach(l=>l.classList.toggle('off',!ch.isDatasetVisible(+l.dataset.i)));
 tg.onclick=e=>{const l=e.target.closest('label');if(!l)return;const i=+l.dataset.i;ch.setDatasetVisibility(i,!ch.isDatasetVisible(i));ch.update();sync()};
 const setv=f=>{S.forEach((s,i)=>ch.setDatasetVisibility(i,f(s)));ch.update();sync()};
-all.onclick=()=>setv(()=>true);none.onclick=()=>setv(()=>false);document.getElementById('pos').onclick=()=>setv(s=>/^S\d/.test(s.name));
-cmp.innerHTML='<tr><th>策略</th><th>净值</th><th>收益</th><th>最大回撤</th><th>胜率</th><th>交易</th></tr>'+S.map((s,i)=>`<tr><td><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${C[i%9]};margin-right:6px"></i>${s.name}</td><td>$${s.equity.toFixed(2)}</td><td class=${sg(s.ret)}>${(s.ret>=0?'+':'')+p(s.ret)}</td><td class=dn>${p(s.mdd)}</td><td>${p(s.win)}</td><td>${s.trades}</td></tr>`).join('');
-wal.innerHTML='<tr><th>钱包</th><th>类别</th><th>已实现$</th><th>币种</th><th>胜率</th><th>开盘入场</th><th>持有中位</th></tr>'+(d.wallets||[]).map(w=>`<tr><td><a href="https://solscan.io/account/${w.addr}" target=_blank>${sh(w.addr)}</a></td><td>${w.kind}</td><td class=${sg(w.pnl)}>${w.pnl.toFixed(1)}</td><td>${w.tokens}</td><td>${p(w.win)}</td><td>${p(w.early)}</td><td>${w.hold_s==null?'—':w.hold_s<3600?Math.round(w.hold_s/60)+'分':(w.hold_s/3600).toFixed(1)+'时'}</td></tr>`).join('');
-const E=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const M=d.tokens_meta||{};const TK=(t,g,dd)=>{const m=M[t]||{};return `<span class=tkn><b>${E(m.n||'未知')}</b><small>${E(m.s||'')}</small>${g?'<span class=badge>已毕业</span>':''}${dd?'<span class="badge d">死币</span>':''}<br><a href="https://dexscreener.com/solana/${t}" target=_blank>${sh(t)} ↗</a></span>`};
+all.onclick=()=>setv(()=>true);none.onclick=()=>setv(()=>false);pos.onclick=()=>setv(s=>/^S\d/.test(s.name));sync();
+const TK=(t,g,dd)=>{const m=M[t]||{};return `<span class=tkn><b>${E(m.n||m.s||'未知')}</b><small>${E(m.s||'')}</small>${g?'<span class=pill>已毕业</span>':''}${dd?'<span class="pill d">死币</span>':''}<br><a href="https://dexscreener.com/solana/${t}" target=_blank>${sh(t)} ↗</a></span>`};
 const px=x=>x?'$'+(+x).toPrecision(3):'—';
-const RH='<tr><th>代币</th><th>策略</th><th>买入时间</th><th>买入价</th><th>平仓时间</th><th>卖出价</th><th>盈亏%</th><th>盈亏$</th><th>平仓原因</th><th>出场明细</th></tr>';
-const RR=(x,sn)=>`<tr><td>${TK(x.tk,x.g)}</td>${sn?`<td style="text-align:left">${E(sn)}</td>`:''}<td>${x.ti}</td><td>${px(x.pi)}</td><td>${x.to}</td><td>${px(x.po)}</td><td class=${sg(x.r)}>${(x.r>=0?'+':'')+p(x.r)}</td><td class=${sg(x.u)}>${x.u.toFixed(2)}</td><td>${E(x.w)}</td><td style="text-align:left" class=mu>${E(x.ex)}</td></tr>`;
-const T=S.flatMap(s=>s.rts.map(x=>({...x,s:s.name}))).sort((a,b)=>b.to.localeCompare(a.to));
+// Activity log from recent roundtrips
+const acts=[];
+S.forEach(s=>{(s.rts||[]).slice(0,8).forEach(x=>{acts.push({t:x.to,side:'SELL',s:s.name,tk:x.tk,r:x.r,u:x.u,w:x.w});acts.push({t:x.ti,side:'BUY',s:s.name,tk:x.tk,r:null,u:null,w:'入场'});});});
+acts.sort((a,b)=>b.t.localeCompare(a.t));
+logn.textContent=`${acts.length} EVENTS`;
+log.innerHTML=acts.slice(0,40).map(a=>{const m=M[a.tk]||{};const sym=m.s||sh(a.tk);const cls=a.side==='BUY'?'buy':(a.r!=null&&a.r<0?'sell':'sell');
+ return `<div class=row><span class="tagb ${cls}">${a.side}</span><div><b>$${E(sym)}</b> · ${E(a.s.split('(')[0].trim())}<div class=mu>${a.t.slice(5)} · ${E(a.w||'')}</div></div><div class="${a.r==null?'mu':sg(a.r)}" style="font-weight:700">${a.r==null?'—':((a.r>=0?'+':'')+p(a.r))}</div></div>`;}).join('')||'<div class=mu>暂无成交</div>';
+// Strategy + wallet cards
+let cardsHtml=S.map((s,i)=>{const av=s.name.replace(/[^A-Za-z0-9\u4e00-\u9fff]/g,'').slice(0,2)||'S';const on=s.trades>0;
+ return `<div class=wcard><div class=top><div class=av style="background:${C[i%9]}">${E(av)}</div><span class=${on?'copying':'idle'}>${on?'COPYING':'IDLE'}</span></div>
+ <div class=nm title="${E(s.name)}">${E(s.name)}</div><div class="pnl ${sg(s.ret)}">${(s.ret>=0?'+':'')+p(s.ret)}</div>
+ <div class=meta>$${s.equity.toFixed(2)} · MDD ${p(s.mdd)} · ${s.trades} trades · WR ${p(s.win)}</div></div>`;}).join('');
+cardsHtml+=W.slice(0,12).map((w,i)=>{const on=w.smart;return `<div class=wcard><div class=top><div class=av>#${i+1}</div><span class=${on?'copying':'idle'}>${on?'SMART':'WATCH'}</span></div>
+ <div class=nm><a href="https://solscan.io/account/${w.addr}" target=_blank>${sh(w.addr)}</a></div>
+ <div class="pnl ${sg(w.pnl)}">${w.pnl>=0?'+':''}$${w.pnl.toFixed(1)}</div>
+ <div class=meta>${E(w.kind)} · ${w.tokens} tokens · WR ${p(w.win)}</div></div>`;}).join('');
+cards.innerHTML=cardsHtml;
+const RH='<tr><th class=l>代币</th><th class=l>策略</th><th>买入时间</th><th>买入价</th><th>平仓时间</th><th>卖出价</th><th>盈亏%</th><th>盈亏$</th><th class=l>平仓原因</th></tr>';
+const RR=(x,sn)=>`<tr><td class=l>${TK(x.tk,x.g)}</td>${sn?`<td class=l>${E(sn)}</td>`:''}<td>${x.ti}</td><td>${px(x.pi)}</td><td>${x.to}</td><td>${px(x.po)}</td><td class=${sg(x.r)}>${(x.r>=0?'+':'')+p(x.r)}</td><td class=${sg(x.u)}>${(+x.u).toFixed(2)}</td><td class=l>${E(x.w)}</td></tr>`;
+const T=S.flatMap(s=>(s.rts||[]).map(x=>({...x,s:s.name}))).sort((a,b)=>b.to.localeCompare(a.to));
 fs.innerHTML+=S.map(s=>`<option>${E(s.name)}</option>`).join('');
-const rt=()=>{const f=fs.value;tr.innerHTML=RH+T.filter(x=>!f||x.s==f).slice(0,100).map(x=>RR(x,x.s)).join('')};
-const O=S.flatMap(s=>s.ops.map(x=>({...x,s:s.name})));
-op.innerHTML=O.length?'<tr><th>代币</th><th>策略</th><th>买入时间</th><th>买入价</th><th>最新价</th><th>最后成交</th><th>估值$</th><th>浮动盈亏</th><th>状态</th></tr>'+O.map(x=>`<tr><td>${TK(x.tk,x.g,x.d)}</td><td style="text-align:left">${E(x.s)}</td><td>${x.ti}</td><td>${px(x.pi)}</td><td>${px(x.pn)}</td><td>${x.lt}</td><td>${x.v.toFixed(2)}</td><td class=${sg(x.r)}>${(x.r>=0?'+':'')+p(x.r)}</td><td>${x.d?'12h无成交→按0计':x.tp?'已止盈一半':'持有中'}</td></tr>`).join(''):'<tr><td class=mu>期末没有持仓</td></tr>';
-alltr.innerHTML=S.map(s=>`<details class=st><summary>${E(s.name)} · ${s.rts.length} 笔已平仓 · ${s.ops.length} 笔期末持仓 · 净值 $${s.equity.toFixed(2)}</summary><div class=tw><table>${RH.replace('<th>策略</th>','')}${s.rts.map(x=>RR(x)).join('')||'<tr><td class=mu>无交易</td></tr>'}</table></div></details>`).join('');
-fs.onchange=rt;rt();sync();});
+const rt=()=>{const f=fs.value;tr.innerHTML=RH+T.filter(x=>!f||x.s===f).slice(0,100).map(x=>RR(x,x.s)).join('')};
+fs.onchange=rt;rt();
+const O=S.flatMap(s=>(s.ops||[]).map(x=>({...x,s:s.name})));
+op.innerHTML=O.length?'<tr><th class=l>代币</th><th class=l>策略</th><th>买入时间</th><th>买入价</th><th>最新价</th><th>最后成交</th><th>估值$</th><th>浮动盈亏</th><th>状态</th></tr>'+O.map(x=>`<tr><td class=l>${TK(x.tk,x.g,x.d)}</td><td class=l>${E(x.s)}</td><td>${x.ti}</td><td>${px(x.pi)}</td><td>${px(x.pn)}</td><td>${x.lt||'—'}</td><td>${(+x.v).toFixed(2)}</td><td class=${sg(x.r)}>${(x.r>=0?'+':'')+p(x.r)}</td><td>${x.d?'死币按0':x.tp?'已止盈一半':'持有中'}</td></tr>`).join(''):'<tr><td class=mu>期末没有持仓</td></tr>';
+alltr.innerHTML=S.map(s=>`<details class=st><summary>${E(s.name)} · ${(s.rts||[]).length} 笔已平仓 · ${(s.ops||[]).length} 笔持仓 · $${s.equity.toFixed(2)}</summary><div class=tw><table>${RH.replace('<th class=l>策略</th>','')}${(s.rts||[]).map(x=>RR(x)).join('')||'<tr><td class=mu>无交易</td></tr>'}</table></div></details>`).join('');
+limits.innerHTML=`<li>数据：pump.fun 公开成交（曲线 + PumpSwap）；代币池来自最新创建/最近成交列表，存在幸存者偏差。</li>
+<li>每笔 $10，买卖各 4%；冲击按曲线虚拟储备约 30 SOL / 毕业池约 85 SOL 近似。</li>
+<li>S1–S5 只在样本后 60% 交易；期末 12h 无成交按 0 计。</li>
+<li>交易数少，结果不显著；未模拟 MEV/税币；占位钱包=训练期买币种类最多的地址，多为机器人，非真实领头。</li>`;
+});
 </script></body></html>
