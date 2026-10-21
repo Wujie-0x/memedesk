@@ -1,0 +1,23 @@
+<!doctype html><html lang=zh><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>MemeDesk · four.meme 跟单策略模拟看板</title><script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script><script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
+<style>body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#0f1218;color:#e6e6e6;margin:0;padding:20px;max-width:1200px;margin:auto}
+h1{font-size:22px}.muted{color:#999;font-size:13px}.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.card{background:#181d26;border-radius:10px;padding:14px}.big{font-size:22px;font-weight:bold}.pos{color:#3fb950}.neg{color:#f85149}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{border-bottom:1px solid #2a3140;padding:5px;text-align:left}
+details{margin-top:8px}summary{cursor:pointer;color:#58a6ff}footer{margin-top:30px;color:#f0b429;text-align:center;font-size:14px}</style></head><body>
+<h1>MemeDesk · BNB Chain four.meme 跟单策略模拟看板</h1><div class=muted id=meta></div>
+<div class=card style="margin:14px 0"><canvas id=c height=110></canvas></div><div class=cards id=cards></div>
+<div class=card style="margin-top:14px"><h3>数据局限</h3><ul class=muted>
+<li>数据为 four.meme 曲线内 TokenPurchase/TokenSale 链上事件；毕业币接 PancakeSwap V2 池子储备价格（毕业币很少）。</li>
+<li>每笔 $10，买卖各扣 4%；入场按信号后下一笔成交价，并加恒定乘积自身冲击近似（虚拟储备约 5 BNB，为估算值）。</li>
+<li>期末 12 小时无成交的持仓按 0 计；S1–S5 只在样本后 60% 交易（前 40% 用于选钱包）。</li>
+<li>各策略交易数少，结果不显著；未模拟 MEV 夹子、税币税率；开发者/捆绑识别均为近似；占位钱包不是真实领头钱包。</li></ul></div>
+<footer>⚠️ 仅模拟研究，不构成投资建议。不连接钱包，不进行任何真实交易。</footer>
+<script>fetch('data.json?'+Date.now()).then(r=>r.json()).then(d=>{
+meta.textContent=`更新时间 ${d.updated}（北京时间）· 样本 ${d.sample[0]} → ${d.sample[1]} · 训练/测试切分 ${d.split} · ${d.rows.toLocaleString()} 笔成交 · ${d.tokens.toLocaleString()} 个代币`;
+const C=['#f85149','#999','#f0b429','#58a6ff','#79c0ff','#3fb950','#d2a8ff','#39c5cf','#ff7b72'];const p=x=>x==null?'—':(x*100).toFixed(1)+'%';
+new Chart(c,{type:'line',data:{datasets:d.strategies.map((s,i)=>({label:s.name,data:s.curve.map(([x,y])=>({x,y})),borderColor:C[i%9],pointRadius:0,borderWidth:2}))},
+options:{animation:false,plugins:{legend:{labels:{color:'#ccc'}}},scales:{x:{type:'time',ticks:{color:'#888'}},y:{ticks:{color:'#888'},title:{display:true,text:'净值 $',color:'#888'}}}}});
+cards.innerHTML=d.strategies.map(s=>`<div class=card><b>${s.name}</b><div class="big ${s.ret>=0?'pos':'neg'}">$${s.equity.toFixed(2)} <small>${(s.ret>=0?'+':'')+p(s.ret)}</small></div>
+<div class=muted>最大回撤 ${p(s.mdd)} · 胜率 ${p(s.win)} · 交易 ${s.trades}</div><details><summary>最近交易（${s.log.length}）</summary><table><tr><th>时间</th><th>方向</th><th>代币</th><th>原因</th><th>$</th><th>涨跌</th></tr>
+${s.log.map(l=>`<tr><td>${l.t.slice(5)}</td><td>${l.side}</td><td><a style="color:#58a6ff" href="https://dexscreener.com/bsc/${l.token}" target=_blank>${l.token.slice(0,8)}…</a></td><td>${l.why}</td><td>${l.usd}</td><td>${l.r==null?'':p(l.r)}</td></tr>`).join('')}</table></details></div>`).join('')});</script></body></html>
