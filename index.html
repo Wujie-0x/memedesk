@@ -18,12 +18,14 @@ main{padding:12px;display:grid;gap:12px;grid-template-columns:1fr}
 th,td{padding:6px 8px;border-bottom:1px solid var(--ln);text-align:right;white-space:nowrap}th{color:var(--mu);font-weight:500;position:sticky;top:0;background:var(--pn)}
 td:first-child,th:first-child{text-align:left}tr:hover td{background:#1a202b}a{color:var(--ac);text-decoration:none}
 .btn{font-size:12px;background:#1f2633;border:1px solid var(--ln);color:var(--tx);border-radius:5px;padding:3px 8px;cursor:pointer}
+details.st{border-top:1px solid var(--ln);padding:6px 0}details.st summary{cursor:pointer;color:var(--ac)}.tkn b{font-weight:600}.tkn small{color:var(--mu);margin-left:4px}.badge{font-size:10px;border-radius:3px;padding:1px 4px;margin-left:4px;background:#22303f;color:#79c0ff}.badge.d{background:#3a1d1d;color:#f85149}
+@media(max-width:1023px){th,td{padding:5px 6px;font-size:12px}}
 ul.lim{margin:0;padding-left:18px;color:var(--mu);font-size:12px;line-height:1.7}footer{text-align:center;color:#f0b429;padding:16px;font-size:13px}
 @media(min-width:1024px){
  main{grid-template-columns:repeat(12,1fr);padding:16px 20px;max-width:1800px;margin:auto}
  .kpis{grid-column:1/-1;grid-template-columns:repeat(6,1fr)}
  #chartP{grid-column:1/10}#chartP .chartbox{height:440px}#sideP{grid-column:10/13}
- #cmpP{grid-column:1/8}#walP{grid-column:8/13}#tradeP{grid-column:1/-1}#limP{grid-column:1/-1}
+ #cmpP{grid-column:1/8}#walP{grid-column:8/13}#tradeP,#openP,#allP{grid-column:1/-1}#limP{grid-column:1/-1}
  .tw.scroll{max-height:360px;overflow-y:auto}
 }
 </style></head><body>
@@ -36,7 +38,9 @@ ul.lim{margin:0;padding-left:18px;color:var(--mu);font-size:12px;line-height:1.7
 <section class=pn id=sideP><h3>样本概况</h3><table id=info></table></section>
 <section class=pn id=cmpP><h3>策略对比</h3><div class=tw><table id=cmp></table></div></section>
 <section class=pn id=walP><h3>领头钱包评估（训练期画像）</h3><div class="tw scroll"><table id=wal></table></div></section>
-<section class=pn id=tradeP><h3>最近交易</h3><div style="margin-bottom:6px"><select class=btn id=fs><option value="">全部策略</option></select></div><div class="tw scroll"><table id=tr></table></div></section>
+<section class=pn id=tradeP><h3>最近交易（逐笔往返：买入 → 平仓）</h3><div style="margin-bottom:6px"><select class=btn id=fs><option value="">全部策略</option></select> <span class=mu>价格单位：USD/枚；期末未平仓已按最后价估值平仓（原因"期末估值平仓"）</span></div><div class="tw scroll"><table id=tr></table></div></section>
+<section class=pn id=openP><h3>当前持仓（样本期末）</h3><div class="tw scroll"><table id=op></table></div></section>
+<section class=pn id=allP><h3>各策略全部交易</h3><div id=alltr></div></section>
 <section class=pn id=limP><h3>数据局限</h3><ul class=lim>
 <li>数据是 four.meme 曲线内 TokenPurchase/TokenSale 链上事件；毕业币用 PancakeSwap V2 池子储备算价格（毕业币很少）。</li>
 <li>每笔 $10，买卖各扣 4%；按信号后下一笔成交价入场，另加恒定乘积自身冲击近似（虚拟储备约 5 BNB，是估算值）。</li>
@@ -62,8 +66,16 @@ const setv=f=>{S.forEach((s,i)=>ch.setDatasetVisibility(i,f(s)));ch.update();syn
 all.onclick=()=>setv(()=>true);none.onclick=()=>setv(()=>false);document.getElementById('pos').onclick=()=>setv(s=>/^S\d/.test(s.name));
 cmp.innerHTML='<tr><th>策略</th><th>净值</th><th>收益</th><th>最大回撤</th><th>胜率</th><th>交易</th></tr>'+S.map((s,i)=>`<tr><td><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${C[i%9]};margin-right:6px"></i>${s.name}</td><td>$${s.equity.toFixed(2)}</td><td class=${sg(s.ret)}>${(s.ret>=0?'+':'')+p(s.ret)}</td><td class=dn>${p(s.mdd)}</td><td>${p(s.win)}</td><td>${s.trades}</td></tr>`).join('');
 wal.innerHTML='<tr><th>钱包</th><th>类别</th><th>已实现$</th><th>币种</th><th>胜率</th><th>开盘入场</th><th>持有中位</th></tr>'+(d.wallets||[]).map(w=>`<tr><td><a href="https://bscscan.com/address/${w.addr}" target=_blank>${sh(w.addr)}</a></td><td>${w.kind}</td><td class=${sg(w.pnl)}>${w.pnl.toFixed(1)}</td><td>${w.tokens}</td><td>${p(w.win)}</td><td>${p(w.early)}</td><td>${w.hold_s==null?'—':w.hold_s<3600?Math.round(w.hold_s/60)+'分':(w.hold_s/3600).toFixed(1)+'时'}</td></tr>`).join('');
-const T=S.flatMap(s=>s.log.map(l=>({...l,s:s.name}))).sort((a,b)=>b.t.localeCompare(a.t));
-fs.innerHTML+=S.map(s=>`<option>${s.name}</option>`).join('');
-const rt=()=>{const f=fs.value;tr.innerHTML='<tr><th>时间（北京）</th><th>策略</th><th>方向</th><th>代币</th><th>原因</th><th>金额$</th><th>涨跌</th></tr>'+T.filter(x=>!f||x.s==f).slice(0,80).map(l=>`<tr><td>${l.t}</td><td style="text-align:left">${l.s}</td><td class=${l.side=='买'?'up':'dn'}>${l.side}</td><td><a href="https://dexscreener.com/bsc/${l.token}" target=_blank>${sh(l.token)}</a></td><td>${l.why}</td><td>${l.usd}</td><td class=${l.r==null?'':sg(l.r)}>${l.r==null?'':p(l.r)}</td></tr>`).join('')};
+const E=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const M=d.tokens_meta||{};const TK=(t,g,dd)=>{const m=M[t]||{};return `<span class=tkn><b>${E(m.n||'未知')}</b><small>${E(m.s||'')}</small>${g?'<span class=badge>已毕业</span>':''}${dd?'<span class="badge d">死币</span>':''}<br><a href="https://dexscreener.com/bsc/${t}" target=_blank>${sh(t)} ↗</a></span>`};
+const px=x=>x?'$'+(+x).toPrecision(3):'—';
+const RH='<tr><th>代币</th><th>策略</th><th>买入时间</th><th>买入价</th><th>平仓时间</th><th>卖出价</th><th>盈亏%</th><th>盈亏$</th><th>平仓原因</th><th>出场明细</th></tr>';
+const RR=(x,sn)=>`<tr><td>${TK(x.tk,x.g)}</td>${sn?`<td style="text-align:left">${E(sn)}</td>`:''}<td>${x.ti}</td><td>${px(x.pi)}</td><td>${x.to}</td><td>${px(x.po)}</td><td class=${sg(x.r)}>${(x.r>=0?'+':'')+p(x.r)}</td><td class=${sg(x.u)}>${x.u.toFixed(2)}</td><td>${E(x.w)}</td><td style="text-align:left" class=mu>${E(x.ex)}</td></tr>`;
+const T=S.flatMap(s=>s.rts.map(x=>({...x,s:s.name}))).sort((a,b)=>b.to.localeCompare(a.to));
+fs.innerHTML+=S.map(s=>`<option>${E(s.name)}</option>`).join('');
+const rt=()=>{const f=fs.value;tr.innerHTML=RH+T.filter(x=>!f||x.s==f).slice(0,100).map(x=>RR(x,x.s)).join('')};
+const O=S.flatMap(s=>s.ops.map(x=>({...x,s:s.name})));
+op.innerHTML=O.length?'<tr><th>代币</th><th>策略</th><th>买入时间</th><th>买入价</th><th>最新价</th><th>最后成交</th><th>估值$</th><th>浮动盈亏</th><th>状态</th></tr>'+O.map(x=>`<tr><td>${TK(x.tk,x.g,x.d)}</td><td style="text-align:left">${E(x.s)}</td><td>${x.ti}</td><td>${px(x.pi)}</td><td>${px(x.pn)}</td><td>${x.lt}</td><td>${x.v.toFixed(2)}</td><td class=${sg(x.r)}>${(x.r>=0?'+':'')+p(x.r)}</td><td>${x.d?'12h无成交→按0计':x.tp?'已止盈一半':'持有中'}</td></tr>`).join(''):'<tr><td class=mu>期末没有持仓</td></tr>';
+alltr.innerHTML=S.map(s=>`<details class=st><summary>${E(s.name)} · ${s.rts.length} 笔已平仓 · ${s.ops.length} 笔期末持仓 · 净值 $${s.equity.toFixed(2)}</summary><div class=tw><table>${RH.replace('<th>策略</th>','')}${s.rts.map(x=>RR(x)).join('')||'<tr><td class=mu>无交易</td></tr>'}</table></div></details>`).join('');
 fs.onchange=rt;rt();sync();});
 </script></body></html>
