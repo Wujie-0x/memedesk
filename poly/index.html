@@ -1,0 +1,152 @@
+<!doctype html><html lang=zh><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>MemeDesk · Polymarket Research</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
+<style>
+:root{--bg:#eef0f5;--card:#fff;--tx:#0f172a;--mu:#64748b;--ln:#e2e8f0;--up:#059669;--dn:#e11d48;--ac:#2563eb;--sim:#b45309;--chip:#f1f5f9}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.45 -apple-system,"PingFang SC","Segoe UI",sans-serif}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:14px 18px;background:var(--card);border-bottom:1px solid var(--ln);position:sticky;top:0;z-index:10}
+.brand{display:flex;align-items:center;gap:10px}.logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#0f172a,#334155);color:#fff;display:grid;place-items:center;font-weight:800;font-size:12px}
+.brand h1{margin:0;font-size:18px;letter-spacing:-.02em}.brand .sub{font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.06em}
+.badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:#fff7ed;color:var(--sim);border:1px solid #fed7aa}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--mu);background:var(--chip);padding:4px 10px;border-radius:999px}
+.chn{display:inline-flex;border:1px solid var(--ln);border-radius:8px;overflow:hidden;margin-left:auto}
+.chn a{padding:5px 12px;font-size:12px;font-weight:600;color:var(--mu);text-decoration:none}.chn a.on{background:#0f172a;color:#fff}
+main{max-width:1400px;margin:0 auto;padding:14px;display:grid;gap:12px}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kpi{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:14px 16px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.kpi .l{font-size:11px;font-weight:700;color:var(--mu);letter-spacing:.08em;text-transform:uppercase}
+.kpi .v{font-size:26px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.kpi .s{font-size:12px;color:var(--mu);margin-top:2px}.up{color:var(--up)}.dn{color:var(--dn)}
+.mid{display:grid;gap:12px}.card{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:14px;box-shadow:0 1px 2px rgba(15,23,42,.04);min-width:0}
+.card h3{margin:0 0 10px;font-size:12px;font-weight:700;color:var(--mu);letter-spacing:.08em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+.chartbox{height:280px;position:relative}
+.toggles{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.toggles label{font-size:11px;border:1px solid var(--ln);border-radius:999px;padding:3px 9px;cursor:pointer;background:#fff;user-select:none}
+.toggles label.off{opacity:.35}.toggles i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+.tw{overflow:auto;max-height:420px}table{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+th,td{padding:7px 8px;border-bottom:1px solid var(--ln);text-align:right;white-space:nowrap}th{color:var(--mu);font-weight:600;background:#fafbfc;position:sticky;top:0}
+td:first-child,th:first-child{text-align:left}
+.note{background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;font-size:12.5px;color:#92400e;line-height:1.55}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cmp .box{background:var(--chip);border-radius:12px;padding:12px}
+.cmp .box h4{margin:0 0 6px;font-size:12px;color:var(--mu);text-transform:uppercase;letter-spacing:.06em}
+footer{text-align:center;padding:18px 12px 28px;color:var(--sim);font-size:13px;font-weight:600}
+.footnote{color:var(--mu);font-size:11px;font-weight:400;margin-top:4px}
+@media(min-width:1024px){.kpis{grid-template-columns:repeat(4,1fr)}.mid{grid-template-columns:1.6fr 1fr}.chartbox{height:360px}}
+@media(max-width:1023px){header .chn{margin-left:0}.kpi .v{font-size:22px}.cmp{grid-template-columns:1fr}}
+</style></head><body>
+<header>
+ <div class=brand><div class=logo>POLY</div><div><h1>MemeDesk</h1><div class=sub>POLYMARKET · BTC 5M RESEARCH</div></div></div>
+ <span class=badge>SIM · 研究台</span>
+ <span class=live id=sess>SESSION REPLAY</span>
+ <nav class=chn><a href="../">BSC</a><a href="../sol/">SOL</a><a class=on href="./">POLY</a></nav>
+</header>
+<main>
+<section class=note id=disclaimer></section>
+<section class=kpis id=kpis></section>
+<section class=mid>
+ <div class=card><h3><span>净值曲线</span><span class=mu id=feat></span></h3>
+  <div class=toggles id=tg></div>
+  <div class=chartbox><canvas id=c></canvas></div></div>
+ <div class=card><h3><span>真实 vs 代理</span></h3><div class=cmp id=cmp></div>
+  <div style="margin-top:12px;font-size:12px;color:var(--mu)" id=skips></div></div>
+</section>
+<section class=card><h3><span>最近交易</span><span class=mu id=trn></span></h3>
+ <div class=tw><table id=tr></table></div></section>
+<section class=card><h3>参数</h3><div id=params style="font-size:12.5px;color:var(--mu)"></div></section>
+</main>
+<footer>纸面模拟研究 · 不构成投资建议 · 不连钱包 · 不下单
+<div class=footnote id=foot></div></footer>
+<script>
+const $=s=>document.querySelector(s);
+const money=n=>'$'+Number(n).toLocaleString('en-US',{maximumFractionDigits:2});
+const pct=n=>(Number(n)*100).toFixed(2)+'%';
+const cls=n=>n>=0?'up':'dn';
+
+fetch('./data.json').then(r=>r.json()).then(D=>{
+  const real=D.real, proxy=D.proxy, P=D.params||{};
+  $('#disclaimer').innerHTML = (D.disclaimer||'') +
+    '<br>进场：CLOB 开盘中间价近似 · 结算：Gamma outcomePrices（Chainlink 规则市场）· 摩擦：flat fee_bps='+(P.fee_bps??'—')+
+    '（非官方逐笔费率表）。推文营销数字不作结果。';
+  $('#sess').textContent = (D.generated_at||'') + ' · ' + (D.timezone_label||'Asia/Shanghai');
+  $('#foot').textContent = 'series='+(P.series_slug||'')+' · timing='+(P.entry_timing||'')+' · interval='+(P.interval||'');
+
+  const src = real || proxy;
+  if(!src){$('#kpis').innerHTML='<div class=kpi><div class=l>无数据</div><div class=v>—</div><div class=s>请先跑 collect + backtest</div></div>';return;}
+
+  const pnl=src.total_pnl, eq=src.final_equity;
+  $('#kpis').innerHTML = [
+    ['期末净值', money(eq), src.mode==='real'?'真实盘口':'代理对照', cls(pnl)],
+    ['总盈亏', money(pnl), (pnl>=0?'+':'')+pct(pnl/(src.capital||1)), cls(pnl)],
+    ['胜率', pct(src.win_rate), src.wins+'/'+src.n_trades+' 笔', ''],
+    ['最大回撤', pct(src.max_dd), src.first_iso?.slice(0,10)+' → '+src.last_iso?.slice(0,10), 'dn'],
+  ].map(([l,v,s,c])=>`<div class=kpi><div class=l>${l}</div><div class="v ${c}">${v}</div><div class=s>${s||''}</div></div>`).join('');
+
+  // compare boxes
+  const box=(title,s)=>{
+    if(!s) return `<div class=box><h4>${title}</h4>无数据</div>`;
+    return `<div class=box><h4>${title}</h4>
+      <div><b class="${cls(s.total_pnl)}">${money(s.total_pnl)}</b> · 胜率 ${pct(s.win_rate)}</div>
+      <div style="margin-top:4px">${s.n_trades} 笔 · MDD ${pct(s.max_dd)} · 期末 ${money(s.final_equity)}</div></div>`;
+  };
+  $('#cmp').innerHTML = box('真实盘口', real) + box('代理模型', proxy);
+  if(real && real.skips){
+    const sk=real.skips;
+    $('#skips').textContent = `跳过: 无市场窗 ${sk.no_market||0} · 未结算 ${sk.unresolved||0} · 无开盘价 ${sk.no_price||0} · 现金不足 ${sk.no_cash||0}`;
+  }
+
+  // chart
+  const colors={real:'#2563eb', proxy:'#b45309'};
+  const datasets=[];
+  const mk=(key,label,s)=>{
+    if(!s||!s.equity) return;
+    datasets.push({
+      label, data:s.equity.map(p=>({x:p.iso, y:+p.equity})),
+      borderColor:colors[key], backgroundColor:'transparent', tension:.15, pointRadius:0, borderWidth:2
+    });
+  };
+  mk('real','真实盘口', real);
+  mk('proxy','代理对照', proxy);
+  const tg=$('#tg');
+  datasets.forEach((ds,i)=>{
+    const id='tg'+i;
+    const lab=document.createElement('label');
+    lab.innerHTML=`<i style="background:${ds.borderColor}"></i>${ds.label}`;
+    lab.onclick=()=>{lab.classList.toggle('off'); ds.hidden=lab.classList.contains('off'); chart.update();};
+    tg.appendChild(lab);
+  });
+  $('#feat').textContent = datasets.map(d=>d.label).join(' / ') || '—';
+  const chart=new Chart($('#c'),{
+    type:'line',
+    data:{datasets},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{type:'time', time:{tooltipFormat:'yyyy-MM-dd HH:mm'}, ticks:{maxTicks:8, color:'#94a3b8'}, grid:{display:false}},
+        y:{ticks:{callback:v=>'$'+v, color:'#94a3b8'}, grid:{color:'#f1f5f9'}}
+      }
+    }
+  });
+
+  // trades table (real preferred)
+  const trades=(real&&real.trades)||(proxy&&proxy.trades)||[];
+  $('#trn').textContent = `显示 ${trades.length} / 总 ${(real||proxy).n_trades}`;
+  const head='<tr><th>入场</th><th>方向</th><th>进场价</th><th>胜负</th><th>盈亏</th><th class=l>市场</th></tr>';
+  const body=trades.slice().reverse().map(t=>{
+    const pnl=+t.pnl_usd, won=+t.won===1;
+    return `<tr><td class=l>${(t.entry_iso||'').replace('T',' ').replace('Z','')}</td>
+      <td>${t.side==='long'?'Up':'Down'}</td><td>${t.entry_price}</td>
+      <td class="${won?'up':'dn'}">${won?'赢':'输'}</td>
+      <td class="${cls(pnl)}">${money(pnl)}</td>
+      <td class=l style="max-width:220px;overflow:hidden;text-overflow:ellipsis">${t.market_slug||t.mode||''}</td></tr>`;
+  }).join('');
+  $('#tr').innerHTML=head+body;
+
+  $('#params').innerHTML = Object.entries(P).map(([k,v])=>`<div><b>${k}</b>：${v}</div>`).join('');
+}).catch(e=>{
+  $('#disclaimer').textContent='无法加载 data.json：'+e;
+});
+</script></body></html>
